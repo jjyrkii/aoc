@@ -17,10 +17,35 @@ fn part_1(input: &str) -> usize {
 }
 
 fn part_2(input: &str) -> usize {
-    0
+    input
+        .lines()
+        .filter(|line| {
+            let nums: Vec<u8> = line
+                .split_whitespace()
+                .map(|i| i.parse::<u8>().unwrap())
+                .collect();
+            variants_are_safe(nums)
+        })
+        .collect::<Vec<_>>()
+        .len()
 }
 
-pub fn is_safe(input: Vec<u8>) -> bool {
+fn variants_are_safe(input: Vec<u8>) -> bool {
+    if is_safe(input.clone()) {
+        return true;
+    }
+
+    for i in 0..input.len() {
+        let mut temp = input.clone();
+        temp.remove(i);
+        if is_safe(temp) {
+            return true;
+        }
+    }
+    false
+}
+
+fn is_safe(input: Vec<u8>) -> bool {
     let increasing = input.is_sorted_by(|a, b| a < b);
     let decreasing = input.is_sorted_by(|a, b| a > b);
     if !increasing && !decreasing {
@@ -44,28 +69,56 @@ mod tests {
         use super::*;
 
         #[test]
-        fn increasing() {
-            assert_eq!(true, is_safe(vec![1, 3, 6, 7, 9]));
-        }
-        #[test]
         fn decreasing() {
-            assert_eq!(true, is_safe(vec![7, 6, 4, 2, 1]));
+            assert!(is_safe(vec![7, 6, 4, 2, 1]));
         }
         #[test]
         fn increase_too_large() {
-            assert_eq!(false, is_safe(vec![1, 2, 7, 8, 9]));
+            assert!(!is_safe(vec![1, 2, 7, 8, 9]));
         }
         #[test]
         fn decrease_too_large() {
-            assert_eq!(false, is_safe(vec![9, 7, 6, 2, 1]));
+            assert!(!is_safe(vec![9, 7, 6, 2, 1]));
         }
         #[test]
         fn increase_and_decrease() {
-            assert_eq!(false, is_safe(vec![1, 3, 2, 4, 5]));
+            assert!(!is_safe(vec![1, 3, 2, 4, 5]));
         }
         #[test]
         fn repeating_number() {
-            assert_eq!(false, is_safe(vec![8, 6, 4, 4, 1]));
+            assert!(!is_safe(vec![8, 6, 4, 4, 1]));
+        }
+        #[test]
+        fn increasing() {
+            assert!(is_safe(vec![1, 3, 6, 7, 9]));
+        }
+    }
+    mod variants_are_safe {
+        use super::*;
+
+        #[test]
+        fn safe_no_removing_1() {
+            assert!(variants_are_safe(vec![7, 6, 4, 2, 1]));
+        }
+        #[test]
+        fn removed_anyway_1() {
+            assert!(!variants_are_safe(vec![1, 2, 7, 8, 9]));
+        }
+        #[test]
+        fn removed_anyway_2() {
+            assert!(!variants_are_safe(vec![9, 7, 6, 2, 1]));
+        }
+        #[test]
+        fn removing_second_level() {
+            assert!(variants_are_safe(vec![1, 3, 2, 4, 5]));
+        }
+        #[test]
+        fn removing_third_level() {
+            assert!(variants_are_safe(vec![8, 6, 4, 4, 1]));
+        }
+        #[test]
+        fn safe_no_removing_2() {
+            assert!(variants_are_safe(vec![1, 3, 6, 7, 9]));
         }
     }
 }
